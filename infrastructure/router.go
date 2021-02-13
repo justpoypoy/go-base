@@ -11,7 +11,15 @@ import (
 )
 
 // Dispatch is handle routing
-func Dispatch(logger usecases.Logger, sqlHandler interfaces.SQLHandler) {
+func Dispatch(port string, logger usecases.Logger, sqlHandler interfaces.SQLHandler) *http.Server {
+	server := &http.Server{
+		Addr:    port,
+		Handler: engine(logger, sqlHandler),
+	}
+	return server
+}
+
+func engine(logger usecases.Logger, sqlHandler interfaces.SQLHandler) *gin.Engine {
 	userController := interfaces.NewUserController(sqlHandler, logger)
 
 	if os.Getenv("APP_ENV") == "production" {
@@ -26,7 +34,7 @@ func Dispatch(logger usecases.Logger, sqlHandler interfaces.SQLHandler) {
 	users(route, userController)
 
 	route.NoRoute(noRoute)
-	route.Run(":8088")
+	return route
 }
 
 func users(route *gin.Engine, controller *interfaces.UserController) *gin.Engine {
